@@ -3,7 +3,7 @@ Specific exceptions.
 """
 
 
-from typing import Tuple
+from typing import Tuple, Hashable
 from . import typing as _t
 
 
@@ -52,7 +52,7 @@ class BadLabelsCount(InterpolationError):
         )
 
 
-class OutOfRangeError(InterpolationError):
+class OutOfRange(InterpolationError):
     """
     If given argument is out nodes range.
     """
@@ -61,10 +61,19 @@ class OutOfRangeError(InterpolationError):
         super().__init__(f'Argument {x} is out of range.')
 
 
-class DataGapError(InterpolationError):
+class DataGap(InterpolationError):
     """
     If given argument hit in data gap.
     """
 
     def __init__(self, x: _t.Number_):
         super().__init__(f'Data gap at argument {x}.')
+
+
+class UnknownTarget(InterpolationError):
+    """
+    If given target is unknown.
+    """
+
+    def __init__(self, target: Hashable):
+        super().__init__(f'Target {target} is unknown.')
