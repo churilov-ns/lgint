@@ -49,6 +49,7 @@ class Interpolator(object):
         self.args = xs
         self.nodes = defaultdict(list)
         self._init_nodes(ys, labels, max_dx)
+        self._cache = None
 
     def interpolate(
         self,
@@ -58,14 +59,36 @@ class Interpolator(object):
         """
         ...
         """
+        if self._cache is not None and \
+                self.args[self._cache] < x <= self.args[self._cache + 1]:
+            i = self._cache
+        else:
+            i = np.searchsorted(self.args, x)
+            if i == 0 or i == self.args.size:
+                raise _e.OutOfRange(x)
+            i -= 1
+            self._cache = i
 
-        pass
+        if targets is None:
+            targets = list(self.nodes.keys())
+
+        results = dict()
+        for target in targets:
+            try:
+                node = self.nodes[target][i]
+                if node is None:
+                    raise _e.DataGap(x)
+                results[target] = node.eval(x)
+            except KeyError:
+                raise _e.UnknownTarget(target)
+
+        return results
 
     def _init_nodes(
         self,
         ys: np.ndarray,
         labels: List[Hashable],
-        max_dx: Optional[_t.Number_]
+        max_dx: Optional[_t.Number_],
     ):
         """
         ...
@@ -73,7 +96,8 @@ class Interpolator(object):
 
         window = self.order + 1
         hi = window
-        for i in range(self.args.size):
+
+        for i in range(self.args.size - 1):
             if hi < self.args.size and hi - i >= window // 2:
                 hi += 1
 
